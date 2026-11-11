@@ -5,7 +5,9 @@ from assistant.models import AlertPayload
 
 load_dotenv()
 
-DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
+# Quotes aur whitespace ko strip karein taake schema valid rahe
+raw_url = os.getenv("DISCORD_WEBHOOK_URL", "")
+DISCORD_WEBHOOK_URL = raw_url.strip().strip('"').strip("'")
 
 SEVERITY_COLORS = {
     "critical": 15158332,  # Red
