@@ -7,7 +7,8 @@ RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 # ---- Stage 2: small runtime image
 FROM python:3.12-slim
 WORKDIR /app
-RUN useradd --create-home appuser
+RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/* \
+    && useradd --create-home appuser
 COPY --from=build /install /usr/local
 COPY main.py .
 USER appuser
