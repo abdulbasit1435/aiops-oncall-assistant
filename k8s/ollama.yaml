@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ollama-models
+  namespace: aiops
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ollama
+  namespace: aiops
+  labels:
+    app: ollama
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: ollama
+  template:
+    metadata:
+      labels:
+        app: ollama
+    spec:
+      containers:
+      - name: ollama
+        image: ollama/ollama:0.5.7
+        ports:
+        - name: http
+          containerPort: 11434
+        env:
+        - name: OLLAMA_KEEP_ALIVE
+          value: "24h"
+        volumeMounts:
+        - name: models
+          mountPath: /root/.ollama
+        resources:
+          requests:
+            cpu: "1"
+            memory: 2Gi
+          limits:
+            memory: 10Gi
+      volumes:
+      - name: models
+        persistentVolumeClaim:
+          claimName: ollama-models
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ollama
+  namespace: aiops
+spec:
+  selector:
+    app: ollama
+  ports:
+  - name: http
+    port: 11434
+    targetPort: http

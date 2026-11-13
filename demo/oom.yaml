@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: report-worker
+  namespace: demo
+  labels:
+    app: report-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: report-worker
+  template:
+    metadata:
+      labels:
+        app: report-worker
+    spec:
+      containers:
+      - name: worker
+        image: python:3.12-alpine
+        command:
+        - python
+        - -c
+        - |
+          import time
+          print("report-worker started, allocating memory for monthly aggregation...")
+          chunks = []
+          for i in range(100):
+              print(f"Allocated {i * 10}MB...")
+              chunks.append(b"X" * 10 * 1024 * 1024)
+              time.sleep(0.5)
+        resources:
+          limits:
+            memory: 64Mi

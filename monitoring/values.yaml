@@ -1,0 +1,37 @@
+# We write our own fast alert rules for the demo, so skip the large default set
+defaultRules:
+  create: false
+
+prometheus:
+  prometheusSpec:
+    ruleSelectorNilUsesHelmValues: false
+    serviceMonitorSelectorNilUsesHelmValues: false
+    evaluationInterval: 30s
+    retention: 2d
+
+alertmanager:
+  config:
+    global:
+      resolve_timeout: 5m
+    route:
+      receiver: oncall-assistant
+      group_by: ["alertname", "namespace", "pod"]
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 4h
+    receivers:
+    - name: oncall-assistant
+      webhook_configs:
+      # load PrometheusRules from anywhere
+      - url: http://oncall-assistant.aiops.svc.cluster.local:8000/alert
+        send_resolved: false
+
+# k3s does not expose these components; turning them off avoids empty targets
+kubeEtcd:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeProxy:
+  enabled: false

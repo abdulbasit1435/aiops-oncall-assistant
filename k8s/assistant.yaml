@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oncall-assistant
+  namespace: aiops
+  labels:
+    app: oncall-assistant
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oncall-assistant
+  template:
+    metadata:
+      labels:
+        app: oncall-assistant
+    spec:
+      serviceAccountName: oncall-assistant
+      containers:
+      - name: assistant
+        image: oncall-assistant:0.1.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 8000
+        env:
+        - name: OLLAMA_URL
+          value: http://ollama:11434
+        - name: MODEL
+          value: qwen2.5:3b
+        - name: COOLDOWN_SECONDS
+          value: "600"
+        - name: DISCORD_WEBHOOK_URL
+          valueFrom:
+            secretKeyRef:
+              name: oncall-secrets
+              key: DISCORD_WEBHOOK_URL
+              optional: true
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 3
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 20
+        resources:
+          requests:
+            cpu: 50m
+            memory: 96Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: oncall-assistant
+  namespace: aiops
+spec:
+  selector:
+    app: oncall-assistant
+  ports:
+  - name: http
+    port: 8000
+    targetPort: http

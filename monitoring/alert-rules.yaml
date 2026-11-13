@@ -1,0 +1,35 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: demo-pod-alerts
+  namespace: monitoring
+spec:
+  groups:
+  - name: demo-pods
+    rules:
+    - alert: PodCrashLooping
+      expr: >-
+        increase(kube_pod_container_status_restarts_total{namespace="demo"}[5m]) >= 2
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} keeps restarting"
+
+    - alert: PodOOMKilled
+      expr: >-
+        kube_pod_container_status_last_terminated_reason{namespace="demo",reason="OOMKilled"} == 1
+      for: 30s
+      labels:
+        severity: critical
+      annotations:
+        summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} ran out of memory"
+
+    - alert: PodImagePullFailing
+      expr: >-
+        kube_pod_container_status_waiting_reason{namespace="demo",reason=~"ErrImagePull|ImagePullBackOff"} == 1
+      for: 1m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} cannot pull its image"

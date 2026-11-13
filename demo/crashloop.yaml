@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: broken-api
+  namespace: demo
+  labels:
+    app: broken-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: broken-api
+  template:
+    metadata:
+      labels:
+        app: broken-api
+    spec:
+      containers:
+      - name: api
+        image: busybox:1.36
+        command:
+        - sh
+        - -c
+        - |
+          echo "Starting broken-api v1.4.2..."
+          echo "Connecting to database at db.internal:5432..."
+          echo "FATAL: Connection refused to db.internal:5432" >&2
+          exit 1
