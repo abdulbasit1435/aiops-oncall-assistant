@@ -36,7 +36,8 @@ def test_send_alert_to_discord_mocked(mock_post):
         summary="Node root disk is 92% full."
     )
 
-    result = send_alert_to_discord(alert)
+    with patch("assistant.handler.DISCORD_WEBHOOK_URL", "https://example.com/webhook"):
+        result = send_alert_to_discord(alert)
     assert result is True
     assert mock_post.called
     assert mock_post.call_count == 1
